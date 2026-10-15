@@ -96,7 +96,6 @@ def view_transactions(transactions):
             f"{transaction['description']}"
         )
 
-
 def show_summary(transactions):
     income = sum(
         t["amount"] for t in transactions
@@ -108,11 +107,15 @@ def show_summary(transactions):
         if t["type"] == "expense"
     )
 
+    balance = income - expenses
+
+    savings_rate = (balance / income * 100) if income > 0 else 0
+
     print("\n========== BUDGET SUMMARY ==========")
     print(f"Total Income:   ₹{income:.2f}")
     print(f"Total Expenses: ₹{expenses:.2f}")
-    print(f"Balance:        ₹{income - expenses:.2f}")
-
+    print(f"Balance:        ₹{balance:.2f}")
+    print(f"Savings Rate:   {savings_rate:.2f}%")
 
 def category_summary(transactions):
     categories = defaultdict(float)
