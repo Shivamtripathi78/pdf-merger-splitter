@@ -92,7 +92,3 @@ This project demonstrates:
 **Shivam Tripathi**
 
 GitHub: [@Shivamtripathi78](https://github.com/Shivamtripathi78)
-
-## 📅 30-Day GitHub Project Challenge
-
-Day 5 of my 30-Day GitHub Project Challenge, focused on building practical projects and improving my programming skills.
