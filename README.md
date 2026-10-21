@@ -86,36 +86,8 @@ After starting the application, select an operation from the menu.
 
 *The exact menu options and input format depend on the implementation in `main.py`.*
 
-## 🎯 Learning Outcomes
-
-This project demonstrates:
-
-- Working with third-party Python libraries
-- Reading and writing PDF files
-- File and directory handling
-- Input validation
-- Exception handling
-- Building menu-driven applications
-- Organizing reusable functions
-- Processing user-specified page ranges
-
-## 🔮 Future Improvements
-
-- Graphical user interface (GUI)
-- Drag-and-drop PDF support
-- PDF page rotation
-- PDF page reordering
-- PDF metadata viewer
-- Password-protected PDF support
-- Batch PDF processing
-- Progress indicators for large documents
-
 ## 👨‍💻 Author
 
 **Shivam Tripathi**
 
 - GitHub: [@Shivamtripathi78](https://github.com/Shivamtripathi78)
-
----
-
-⭐ If you find this project useful, consider giving the repository a star!
