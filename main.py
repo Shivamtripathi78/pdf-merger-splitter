@@ -1,210 +1,284 @@
-import json
 from pathlib import Path
-from datetime import datetime
-from collections import defaultdict
-
-DATA_FILE = Path(__file__).with_name("budget_data.json")
+from pypdf import PdfReader, PdfWriter
 
 
-def load_data():
-    if not DATA_FILE.exists():
-        return []
+def get_pdf_path(prompt):
+    """Ask for a PDF file path and validate it."""
+    while True:
+        file_path = Path(input(prompt).strip().strip('"')).expanduser()
+
+        if not file_path.is_file():
+            print("Error: File not found. Please enter a valid path.")
+            continue
+
+        if file_path.suffix.lower() != ".pdf":
+            print("Error: Please select a PDF file.")
+            continue
+
+        try:
+            reader = PdfReader(str(file_path))
+
+            if reader.is_encrypted:
+                print("Error: Encrypted PDFs are not supported.")
+                continue
+
+            return file_path
+
+        except Exception as error:
+            print(f"Error: Unable to read this PDF: {error}")
+
+
+def get_output_path(prompt):
+    """Ask for an output path and validate it."""
+    while True:
+        output_path = Path(input(prompt).strip().strip('"')).expanduser()
+
+        if output_path.suffix.lower() != ".pdf":
+            output_path = output_path.with_suffix(".pdf")
+
+        if output_path.exists():
+            overwrite = input(
+                "This file already exists. Overwrite it? (y/n): "
+            ).strip().lower()
+
+            if overwrite != "y":
+                continue
+
+        try:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            return output_path
+
+        except OSError as error:
+            print(f"Error creating output directory: {error}")
+
+
+def merge_pdfs():
+    """Merge multiple PDF files into one PDF."""
+    print("\n--- Merge PDF Files ---")
+    print("Enter the paths of PDF files one by one.")
+    print("Type 'done' when you have entered all files.")
+
+    pdf_files = []
+
+    while True:
+        file_path = input(
+            f"Enter PDF path ({len(pdf_files) + 1}) or 'done': "
+        ).strip().strip('"')
+
+        if file_path.lower() == "done":
+            break
+
+        if not file_path:
+            print("Please enter a path.")
+            continue
+
+        path = Path(file_path).expanduser()
+
+        if not path.is_file() or path.suffix.lower() != ".pdf":
+            print("Error: Please enter a valid PDF file path.")
+            continue
+
+        try:
+            reader = PdfReader(str(path))
+
+            if reader.is_encrypted:
+                print("Error: Encrypted PDFs are not supported.")
+                continue
+
+            # Check that the PDF can be read.
+            len(reader.pages)
+            pdf_files.append(path)
+            print(f"Added: {path.name}")
+
+        except Exception as error:
+            print(f"Unable to read PDF: {error}")
+
+    if len(pdf_files) < 2:
+        print("Please select at least two valid PDF files to merge.")
+        return
+
+    output_path = get_output_path("Enter output PDF path: ")
 
     try:
-        with open(DATA_FILE, "r", encoding="utf-8") as file:
-            data = json.load(file)
+        writer = PdfWriter()
 
-        if isinstance(data, list):
-            return data
+        for pdf_file in pdf_files:
+            writer.append(str(pdf_file))
 
-        print("Invalid data format. Starting with an empty budget.")
-        return []
+        with output_path.open("wb") as output_file:
+            writer.write(output_file)
 
-    except (json.JSONDecodeError, OSError):
-        print("Could not read saved data. Starting with an empty budget.")
-        return []
+        print(f"\nSuccess! Merged PDF saved to:\n{output_path}")
 
+    except Exception as error:
+        print(f"Error merging PDFs: {error}")
 
-def save_data(transactions):
-    with open(DATA_FILE, "w", encoding="utf-8") as file:
-        json.dump(transactions, file, indent=4)
-
-
-def get_amount():
-    try:
-        amount = float(input("Enter amount (₹): "))
-
-        if amount <= 0:
-            print("Amount must be greater than zero.")
-            return None
-
-        if not amount < float("inf"):
-            print("Please enter a valid amount.")
-            return None
-
-        return round(amount, 2)
-
-    except ValueError:
-        print("Please enter a valid number.")
-        return None
+    finally:
+        if "writer" in locals():
+            writer.close()
 
 
-def add_transaction(transactions, transaction_type):
-    amount = get_amount()
+def split_pdf():
+    """Split a PDF into separate one-page PDF files."""
+    print("\n--- Split PDF ---")
 
-    if amount is None:
-        return
-
-    category = input("Enter category: ").strip().title()
-
-    if not category:
-        print("Category cannot be empty.")
-        return
-
-    description = input("Enter description: ").strip()
-
-    if not description:
-        description = category
-
-    transaction = {
-        "type": transaction_type,
-        "amount": amount,
-        "category": category,
-        "description": description,
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M")
-    }
-
-    transactions.append(transaction)
-    save_data(transactions)
-
-    print(f"{transaction_type.title()} recorded successfully!")
-
-
-def view_transactions(transactions):
-    if not transactions:
-        print("\nNo transactions recorded yet.")
-        return
-
-    print("\n========== TRANSACTION HISTORY ==========")
-
-    for index, transaction in enumerate(transactions, start=1):
-        print(
-            f"{index}. {transaction['date']} | "
-            f"{transaction['type'].title()} | "
-            f"₹{transaction['amount']:.2f} | "
-            f"{transaction['category']} | "
-            f"{transaction['description']}"
-        )
-
-def show_summary(transactions):
-    income = sum(
-        t["amount"] for t in transactions
-        if t["type"] == "income"
-    )
-
-    expenses = sum(
-        t["amount"] for t in transactions
-        if t["type"] == "expense"
-    )
-
-    balance = income - expenses
-
-    savings_rate = (balance / income * 100) if income > 0 else 0
-
-    print("\n========== BUDGET SUMMARY ==========")
-    print(f"Total Income:   ₹{income:.2f}")
-    print(f"Total Expenses: ₹{expenses:.2f}")
-    print(f"Balance:        ₹{balance:.2f}")
-    print(f"Savings Rate:   {savings_rate:.2f}%")
-
-def category_summary(transactions):
-    categories = defaultdict(float)
-
-    for transaction in transactions:
-        if transaction["type"] == "expense":
-            categories[transaction["category"]] += transaction["amount"]
-
-    if not categories:
-        print("\nNo expenses available for category analysis.")
-        return
-
-    print("\n========== EXPENSES BY CATEGORY ==========")
-
-    for category, amount in sorted(categories.items()):
-        print(f"{category}: ₹{amount:.2f}")
-
-
-def delete_transaction(transactions):
-    if not transactions:
-        print("\nNo transactions available to delete.")
-        return
-
-    view_transactions(transactions)
+    pdf_path = get_pdf_path("Enter the PDF path: ")
 
     try:
-        number = int(input("\nEnter transaction number to delete: "))
+        reader = PdfReader(str(pdf_path))
+        total_pages = len(reader.pages)
 
-        if not 1 <= number <= len(transactions):
-            print("Invalid transaction number.")
+        if total_pages < 2:
+            print("This PDF contains fewer than two pages.")
             return
 
-        removed = transactions[number - 1]
+        print(f"Total pages: {total_pages}")
 
-        confirmation = input(
-            f"Delete '{removed['description']}' "
-            f"(₹{removed['amount']:.2f})? (y/n): "
-        ).strip().lower()
+        output_directory = Path(
+            input("Enter output directory: ").strip().strip('"')
+        ).expanduser()
 
-        if confirmation == "y":
-            transactions.pop(number - 1)
-            save_data(transactions)
-            print("Transaction deleted successfully.")
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+        for page_number in range(total_pages):
+            writer = PdfWriter()
+            writer.add_page(reader.pages[page_number])
+
+            output_path = output_directory / (
+                f"{pdf_path.stem}_page_{page_number + 1}.pdf"
+            )
+
+            with output_path.open("wb") as output_file:
+                writer.write(output_file)
+
+            writer.close()
+            print(f"Created: {output_path.name}")
+
+        print(f"\nSuccess! All pages saved in:\n{output_directory}")
+
+    except Exception as error:
+        print(f"Error splitting PDF: {error}")
+
+
+def parse_page_range(page_input, total_pages):
+    """Convert page numbers and ranges into zero-based page indexes."""
+    selected_pages = set()
+
+    for part in page_input.split(","):
+        part = part.strip()
+
+        if not part:
+            raise ValueError("Empty page selection.")
+
+        if "-" in part:
+            if part.count("-") != 1:
+                raise ValueError(f"Invalid page range: {part}")
+
+            start_text, end_text = part.split("-")
+            start = int(start_text.strip())
+            end = int(end_text.strip())
+
+            if start < 1 or end < start or end > total_pages:
+                raise ValueError(f"Invalid page range: {part}")
+
+            selected_pages.update(range(start - 1, end))
+
         else:
-            print("Deletion cancelled.")
+            page = int(part)
 
-    except ValueError:
-        print("Please enter a valid number.")
+            if page < 1 or page > total_pages:
+                raise ValueError(f"Invalid page number: {page}")
+
+            selected_pages.add(page - 1)
+
+    if not selected_pages:
+        raise ValueError("Select at least one page.")
+
+    return sorted(selected_pages)
+
+
+def extract_pages():
+    """Extract selected pages into a new PDF."""
+    print("\n--- Extract Specific Pages ---")
+
+    pdf_path = get_pdf_path("Enter the PDF path: ")
+
+    try:
+        reader = PdfReader(str(pdf_path))
+        total_pages = len(reader.pages)
+
+        print(f"Total pages: {total_pages}")
+        print("Examples: 1,3,5 or 2-5 or 1,3-5,8")
+
+        while True:
+            page_input = input(
+                "Enter page numbers or ranges: "
+            ).strip()
+
+            try:
+                selected_pages = parse_page_range(
+                    page_input, total_pages
+                )
+                break
+
+            except ValueError as error:
+                print(f"Invalid selection: {error}")
+                print("Please try again.")
+
+        output_path = get_output_path("Enter output PDF path: ")
+
+        # Avoid accidentally overwriting the source PDF.
+        if output_path.resolve() == pdf_path.resolve():
+            print("Error: Output path must differ from the source PDF.")
+            return
+
+        writer = PdfWriter()
+
+        for page_index in selected_pages:
+            writer.add_page(reader.pages[page_index])
+
+        try:
+            with output_path.open("wb") as output_file:
+                writer.write(output_file)
+        finally:
+            writer.close()
+
+        print(f"\nSuccess! Extracted {len(selected_pages)} page(s).")
+        print(f"Saved to: {output_path}")
+
+    except Exception as error:
+        print(f"Error extracting pages: {error}")
+
+
+def display_menu():
+    """Display the application's main menu."""
+    print("\n" + "=" * 38)
+    print("       PDF MERGER & SPLITTER")
+    print("=" * 38)
+    print("1. Merge PDF files")
+    print("2. Split PDF into separate pages")
+    print("3. Extract specific pages")
+    print("4. Exit")
+    print("=" * 38)
 
 
 def main():
-    transactions = load_data()
-
+    """Run the PDF Merger & Splitter application."""
     while True:
-        print("\n========== PERSONAL BUDGET PLANNER ==========")
-        print("1. Add Income")
-        print("2. Add Expense")
-        print("3. View Budget Summary")
-        print("4. View Transactions")
-        print("5. View Expenses by Category")
-        print("6. Delete Transaction")
-        print("7. Exit")
-
-        choice = input("\nChoose an option (1-7): ").strip()
+        display_menu()
+        choice = input("Enter your choice (1-4): ").strip()
 
         if choice == "1":
-            add_transaction(transactions, "income")
-
+            merge_pdfs()
         elif choice == "2":
-            add_transaction(transactions, "expense")
-
+            split_pdf()
         elif choice == "3":
-            show_summary(transactions)
-
+            extract_pages()
         elif choice == "4":
-            view_transactions(transactions)
-
-        elif choice == "5":
-            category_summary(transactions)
-
-        elif choice == "6":
-            delete_transaction(transactions)
-
-        elif choice == "7":
-            print("Thank you for using Personal Budget Planner!")
+            print("Thank you for using PDF Merger & Splitter!")
             break
-
         else:
-            print("Invalid choice. Please select 1-7.")
+            print("Invalid choice. Please enter a number from 1 to 4.")
 
 
 if __name__ == "__main__":

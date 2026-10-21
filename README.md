@@ -1,94 +1,121 @@
-# 💰 Python Personal Budget Planner
+# 📄 PDF Merger & Splitter
 
-A command-line budgeting application built with Python to help users track income, manage expenses, analyze spending by category, and monitor their available balance.
+A Python application that makes working with PDF files simple. Merge multiple PDF documents into one file, split PDFs into separate documents, and extract specific pages using an easy-to-use, menu-driven interface.
 
 ## ✨ Features
 
-- 💵 Record income
-- 💸 Track expenses
-- 📊 Calculate total income, expenses, and balance
-- 🗂️ Analyze expenses by category
-- 📅 View transaction history
-- 🗑️ Delete transactions with confirmation
-- 💾 Store transaction data in JSON
-- 🔄 Automatically load saved transactions
-- 🛡️ Validate user input
+- 📎 **Merge PDFs:** Combine multiple PDF files into a single document.
+- ✂️ **Split PDFs:** Split a PDF into separate files, one page per file.
+- 📑 **Extract Pages:** Extract specific pages or a selected page range.
+- 🔢 **Page Selection:** Specify which pages to extract.
+- 🛡️ **Input Validation:** Validate file paths and page numbers.
+- ⚠️ **Error Handling:** Handle missing files, invalid page ranges, and PDF processing errors.
+- 💻 **Simple Interface:** Use a straightforward command-line menu.
+- 🔒 **Original File Protection:** Keep the original PDF files unchanged.
 
 ## 🛠️ Technologies Used
 
-- Python
-- JSON
+- Python 3
+- pypdf
 - File Handling
-- datetime
-- collections
+- Exception Handling
 
 ## 📂 Project Structure
 
 ```text
-python-budget-planner/
+pdf-merger-splitter/
 ├── main.py
+├── requirements.txt
 ├── README.md
-├── .gitignore
-└── budget_data.json
+└── .gitignore
 ```
-
-`budget_data.json` is generated automatically when a transaction is saved.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Python 3 installed on your computer.
+- Python 3.9 or later
+- pip (Python package installer)
 
-### Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/Shivamtripathi78/python-budget-planner.git
-```
-
-Navigate to the project directory:
+### 1. Clone the Repository
 
 ```bash
-cd python-budget-planner
+git clone https://github.com/Shivamtripathi78/pdf-merger-splitter.git
 ```
 
-Run the application:
+### 2. Navigate to the Project Directory
+
+```bash
+cd pdf-merger-splitter
+```
+
+### 3. Install Dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 4. Run the Application
 
 ```bash
 python main.py
 ```
 
-## 📊 Budget Calculation
+## 📖 How to Use
 
-**Balance = Total Income − Total Expenses**
+After starting the application, select an operation from the menu.
 
-The application also groups expenses by category to help users understand their spending patterns.
+### Merge PDFs
+1. Select the merge option.
+2. Enter the paths of the PDF files you want to combine.
+3. Specify the output file path.
+4. The application creates a single PDF containing the selected documents.
+
+### Split a PDF
+1. Select the split option.
+2. Enter the source PDF path.
+3. Specify the output directory.
+4. The application saves each page as a separate PDF file.
+
+### Extract Specific Pages
+1. Select the page extraction option.
+2. Enter the source PDF path.
+3. Specify the page numbers or page range.
+4. Enter the output file path.
+5. The selected pages are saved into a new PDF.
+
+*The exact menu options and input format depend on the implementation in `main.py`.*
 
 ## 🎯 Learning Outcomes
 
 This project demonstrates:
 
-- Python functions and modular programming
-- Lists and dictionaries
-- JSON file handling
-- CRUD operations
-- Input validation and exception handling
-- Date and time handling
-- Expense aggregation using dictionaries
+- Working with third-party Python libraries
+- Reading and writing PDF files
+- File and directory handling
+- Input validation
+- Exception handling
+- Building menu-driven applications
+- Organizing reusable functions
+- Processing user-specified page ranges
 
 ## 🔮 Future Improvements
 
-- Monthly budget limits
-- Spending alerts
-- Export reports to CSV
-- Graphical spending charts
-- Monthly and yearly reports
-- A graphical user interface
+- Graphical user interface (GUI)
+- Drag-and-drop PDF support
+- PDF page rotation
+- PDF page reordering
+- PDF metadata viewer
+- Password-protected PDF support
+- Batch PDF processing
+- Progress indicators for large documents
 
 ## 👨‍💻 Author
 
 **Shivam Tripathi**
 
-GitHub: [@Shivamtripathi78](https://github.com/Shivamtripathi78)
+- GitHub: [@Shivamtripathi78](https://github.com/Shivamtripathi78)
+
+---
+
+⭐ If you find this project useful, consider giving the repository a star!
